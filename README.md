@@ -16,4 +16,5 @@ npx wrangler dev
 ```
 ## Reference
 https://developers.cloudflare.com/workers/tutorials/openai-function-calls-workers/
+https://platform.openai.com/docs/guides/function-calling?lang=node.js
 
