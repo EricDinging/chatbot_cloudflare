@@ -14,7 +14,6 @@ async function read_website_content(url) {
 	return resp;
 }
 
-
 async function read_website_helper(msgFunction) {
 	let websiteContent;
 	
@@ -26,46 +25,83 @@ async function read_website_helper(msgFunction) {
 	return websiteContent;
 }
 
+async function call_gpt_get_website(query, key) {
+	const openai = new OpenAI({
+		apiKey: key
+	});
+	try {
+		const messages = [
+			{ role: "user", content: query },
+		];
+		const tools = [{
+			type: "function",
+			function: {
+				name: "read_website_content",
+				description: "Read the content on a given website",
+				parameters: {
+					type: "object",
+					properties: {
+						url: {
+							type: "string",
+							description: "The URL to the website to read ",
+						},
+					},
+					required: ["url"],
+				},
+			},
+		},];
+		
+		const response = await openai.chat.completions.create({
+			model: "gpt-3.5-turbo-0125",
+			messages: messages,
+			tools: tools,
+			tool_choice: "auto", // auto is default, but we'll be explicit
+		});
+		const responseMessage = response.choices[0].message;
+		console.log(responseMessage);
+		const websiteContent = await read_website_helper(responseMessage["tool_calls"][0]['function'])
+		console.log(websiteContent["url"])
+		return websiteContent["website_body"];
+	} catch (e) {
+		return e;
+	}
+}
+
 export default {
 	async fetch(request, env, ctx) {
-		const openai = new OpenAI({
-			apiKey: env.OPENAI_API_KEY
-		});
-		try {
-			const messages = [
-				{ role: "user", content: "What's cloudflare?" },
-			];
-			const tools = [{
-				type: "function",
-				function: {
-					name: "read_website_content",
-					description: "Read the content on a given website",
-					parameters: {
-						type: "object",
-						properties: {
-							url: {
-								type: "string",
-								description: "The URL to the website to read ",
-							},
-						},
-						required: ["url"],
-					},
-				},
-			},];
-			
-			const response = await openai.chat.completions.create({
-				model: "gpt-3.5-turbo-0125",
-				messages: messages,
-				tools: tools,
-				tool_choice: "auto", // auto is default, but we'll be explicit
-			});
-			const responseMessage = response.choices[0].message;
+		if (request.method === "GET") {
+			const html = `<!DOCTYPE html>
+			<body>
+				<h1>GPT-powered Web Search</h1>
+				<p>Enter a question here, and GPT will return a website url. The website's content will then be shown here!</p>
+				<form action="/submit" method="post">
+					<label for="question">Question:</label>
+					<input type="text" id="question" name="question">
+					<button type="submit">Submit</button>
+				</form>
+			</body>`;
 
-			const websiteContent = await read_website_helper(responseMessage["tool_calls"][0]['function'])
-			console.log(websiteContent["url"])
-			return new Response(websiteContent["website_body"]);
-		} catch (e) {
-			return new Response(e);
+			return new Response(html, {
+				headers: {
+					"content-type": "text/html;charset=UTF-8",
+				},
+			});
+		} else if (request.method === "POST") {
+			const formData = await request.formData();
+			const question = formData.get('question');
+			const key = env.OPENAI_API_KEY;
+			const response = await call_gpt_get_website(question, key);
+			return new Response(response, {
+				headers: {
+					"content-Type": "text/plain",
+				},
+			});
+		} else {
+			return new Response('Method Not Allowed', {
+				status: 405,
+				statusText: 'Method Not Allowed',
+			})
 		}
+		
 	},
-};
+}

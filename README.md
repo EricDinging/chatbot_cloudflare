@@ -1,19 +1,25 @@
 # chatbot_cloudflare
-- Configure npm environment
+A simple GPT-powered cloudflare-powered web search engine in Javascript. 
+Enter a question, and the server will call GPT for a website url that is related to this question. 
+Useful contents from target webpages will then be shown here!
+
+## Configure npm environment
 ```
 npm create cloudflare@latest
-npm install openai
-npx wrangler secret put OPENAI_API_KEY
-npm install cheerio
-
-# For local development
+npm install
+```
+## Develop
+This step requires OpenAI API keys.
+```
 touch .dev.vars
 echo "OPENAI_API_KEY=<key>" > .dev.vars
+npx wrangler secret put OPENAI_API_KEY
+npx wranger dev
 ```
-
-- Development
+## Deploy
+Deploy cloudflare workers.
 ```
-npx wrangler dev
+npx wrangler deploy
 ```
 ## Reference
 https://developers.cloudflare.com/workers/tutorials/openai-function-calls-workers/
