@@ -5,7 +5,6 @@ Useful contents from target webpages will then be shown here!
 
 ## Configure npm environment
 ```
-npm create cloudflare@latest
 npm install
 ```
 ## Develop
