@@ -1,15 +1,29 @@
 import OpenAI from "openai";
+import * as cheerio from "cheerio";
 
-function getCurrentWeather(location, unit = "fahrenheit") {
-	if (location.toLowerCase().includes("tokyo")) {
-	  return JSON.stringify({ location: "Tokyo", temperature: "10", unit: "celsius" });
-	} else if (location.toLowerCase().includes("san francisco")) {
-	  return JSON.stringify({ location: "San Francisco", temperature: "72", unit: "fahrenheit" });
-	} else if (location.toLowerCase().includes("paris")) {
-	  return JSON.stringify({ location: "Paris", temperature: "22", unit: "fahrenheit" });
-	} else {
-	  return JSON.stringify({ location, temperature: "unknown" });
+async function read_website_content(url) {
+	console.log("reading website content");
+
+	const response = await fetch(url);
+	const body = await response.text();
+	let cheerioBody = cheerio.load(body);
+	const resp = {
+		website_body: cheerioBody("p").text(),
+		url: url
 	}
+	return resp;
+}
+
+
+async function read_website_helper(msgFunction) {
+	let websiteContent;
+	
+	if (msgFunction["name"] === "read_website_content") {
+		const url = JSON.parse(msgFunction["arguments"]).url;
+		websiteContent = await read_website_content(url);
+		// console.log(websiteContent); 
+	}
+	return websiteContent;
 }
 
 export default {
@@ -19,24 +33,23 @@ export default {
 		});
 		try {
 			const messages = [
-				{ role: "user", content: "What's the weather like in San Francisco, Tokyo, and Paris?" },
+				{ role: "user", content: "What's cloudflare?" },
 			];
 			const tools = [{
 				type: "function",
 				function: {
-				name: "get_current_weather",
-				description: "Get the current weather in a given location",
-				parameters: {
-					type: "object",
-					properties: {
-					location: {
-						type: "string",
-						description: "The city and state, e.g. San Francisco, CA",
+					name: "read_website_content",
+					description: "Read the content on a given website",
+					parameters: {
+						type: "object",
+						properties: {
+							url: {
+								type: "string",
+								description: "The URL to the website to read ",
+							},
+						},
+						required: ["url"],
 					},
-					unit: { type: "string", enum: ["celsius", "fahrenheit"] },
-					},
-					required: ["location"],
-				},
 				},
 			},];
 			
@@ -48,16 +61,9 @@ export default {
 			});
 			const responseMessage = response.choices[0].message;
 
-			// TODO: continue working on function calling
-			// if (responseMessage.tool_calls) {
-			// 	const availableFunctions = {
-			// 		get_current_weather: getCurrentWeather,
-			// 	}
-			// 	messages.push(responseMessage);
-
-			// }
-
-			return new Response('Hello World!');
+			const websiteContent = await read_website_helper(responseMessage["tool_calls"][0]['function'])
+			console.log(websiteContent["url"])
+			return new Response(websiteContent["website_body"]);
 		} catch (e) {
 			return new Response(e);
 		}

@@ -4,6 +4,7 @@
 npm create cloudflare@latest
 npm install openai
 npx wrangler secret put OPENAI_API_KEY
+npm install cheerio
 
 # For local development
 touch .dev.vars
