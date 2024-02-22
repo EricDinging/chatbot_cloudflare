@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import * as cheerio from "cheerio";
+import template from "./template";
 
 async function read_website_content(url) {
 	console.log("reading website content");
@@ -59,9 +60,15 @@ async function call_gpt_get_website(query, key) {
 		});
 		const responseMessage = response.choices[0].message;
 		console.log(responseMessage);
-		const websiteContent = await read_website_helper(responseMessage["tool_calls"][0]['function'])
-		console.log(websiteContent["url"])
-		return websiteContent["website_body"];
+		try {
+			const websiteContent = await read_website_helper(
+				responseMessage["tool_calls"][0]['function']
+			)
+			console.log(websiteContent["url"]);
+			return websiteContent["website_body"];
+		} catch {
+			return responseMessage["content"];
+		}
 	} catch (e) {
 		return e;
 	}
@@ -70,18 +77,7 @@ async function call_gpt_get_website(query, key) {
 export default {
 	async fetch(request, env, ctx) {
 		if (request.method === "GET") {
-			const html = `<!DOCTYPE html>
-			<body>
-				<h1>GPT-powered Web Search</h1>
-				<p>Enter a question here, and GPT will return a website url. The website's content will then be shown here!</p>
-				<form action="/submit" method="post">
-					<label for="question">Question:</label>
-					<input type="text" id="question" name="question">
-					<button type="submit">Submit</button>
-				</form>
-			</body>`;
-
-			return new Response(html, {
+			return new Response(template(request.cf), {
 				headers: {
 					"content-type": "text/html;charset=UTF-8",
 				},
