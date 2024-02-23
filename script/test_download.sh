@@ -5,7 +5,7 @@ num_runs=3
 
 for ((i=1; i<=$num_runs; i++))
 do
-    result=$(curl -o /dev/null -s -w "Total time: %{time_total} seconds\n" "http://localhost:8787/$1")
+    result=$(curl -o /dev/null -s -w "Total time: %{time_total} seconds\n" "$1")
     
     # Extracting the time from the result using awk
     time=$(echo $result | awk '{print $3}' | sed 's/s//')
