@@ -3,7 +3,8 @@ A simple GPT-powered cloudflare-powered web search engine in Javascript.
 Enter a question, and the server will call GPT for a website url that is related to this question. 
 Useful contents from target webpages will then be shown here!
 
-File analysis functionality is under construction. 
+File analysis functionality under construction.
+Worker ML inference and reduction functionality under construction.
 ## Configure npm environment
 ```
 npm i create-cloudflare

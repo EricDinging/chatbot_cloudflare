@@ -11,6 +11,7 @@
     "wrangler": "^3.0.0"
   },
   "dependencies": {
+    "@tensorflow/tfjs": "^4.17.0",
     "@vespaiach/axios-fetch-adapter": "^0.3.1",
     "axios": "^1.6.7",
     "cheerio": "^1.0.0-rc.12",
