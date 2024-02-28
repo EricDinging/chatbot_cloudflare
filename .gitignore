@@ -1,1 +1,4 @@
+node_modules
+object
 .dev.vars
+.wrangler
